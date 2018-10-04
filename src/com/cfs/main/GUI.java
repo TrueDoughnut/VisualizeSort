@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 
 public class GUI extends JFrame implements ActionListener {
 
@@ -92,7 +91,7 @@ class Sort {
 
     private int insertionIterator = 1;
     void stepInsertion(){
-        for(int j = insertionIterator; j > 0; j++){
+        for(int j = insertionIterator; j > 0; j--){
             if(vals[j] < vals[j-1]){
                 int temp = vals[j];
                 vals[j] = vals[j-1];
