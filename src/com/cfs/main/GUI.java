@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
+import java.util.Random;
 
 public class GUI extends JFrame implements ActionListener {
 
@@ -12,10 +14,13 @@ public class GUI extends JFrame implements ActionListener {
 
     private Timer timer = new Timer(100, this);
 
+    Panel panel;
+
     void createAndShowGUI(){
         this.setSize(WIDTH, HEIGHT);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        Panel panel = new Panel();
+        panel = new Panel();
         this.add(panel);
 
         timer.start();
@@ -24,23 +29,33 @@ public class GUI extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e){
-        this.revalidate();
-        this.repaint();
+        if(panel.getRepaint()) {
+            this.revalidate();
+            this.repaint();
+        }
     }
+
+    private Timer getTimer(){
+        return timer;
+    }
+
 }
 
 class Panel extends JPanel {
 
     private Sort sort;
+    private int width;
+
+    private boolean repaint = true;
 
     Panel(){
         sort = new Sort();
+        width = sort.getWidth();
     }
 
     @Override
     public void paintComponent(Graphics g){
         int[] arr = sort.getSort();
-        int width = sort.getWidth();
         Graphics2D g2d = (Graphics2D) g;
 
         Rectangle[] rects = new Rectangle[arr.length];
@@ -53,7 +68,12 @@ class Panel extends JPanel {
         for(Rectangle rect : rects){
             g2d.fill(rect);
         }
-        sort.stepInsertion();
+
+        repaint = sort.stepSelection();
+    }
+
+    boolean getRepaint(){
+        return repaint;
     }
 }
 
@@ -62,14 +82,14 @@ class Sort {
     private int[] vals;
     private int[] sort;
 
-    private int width = 20;
+    private int width = 1;
 
     Sort(){
         vals = new int[GUI.WIDTH / width];
         int stepY = GUI.HEIGHT / vals.length;
-        int j = vals.length;
+        Random random = new Random();
         for(int i = 0; i < vals.length; i++){
-            vals[i] = stepY * j--;
+            vals[i] = stepY * random.nextInt(vals.length);
         }
         sort = vals.clone();
     }
@@ -89,16 +109,55 @@ class Sort {
         sort = vals.clone();
     }
 
-    private int insertionIterator = 1;
-    void stepInsertion(){
-        for(int j = insertionIterator; j > 0; j--){
-            if(vals[j] < vals[j-1]){
-                int temp = vals[j];
-                vals[j] = vals[j-1];
-                vals[j-1] = temp;
+    private int startingPosition = 0;
+
+    boolean stepInsertion(){
+        boolean change = false;
+        for(int i = startingPosition + 1; i < vals.length; i++){
+            if(sort[i] < sort[i-1]){
+                int temp = sort[i];
+                sort[i] = sort[i-1];
+                sort[i-1] = temp;
+                change = true;
             }
         }
-        insertionIterator++;
+        return change;
+    }
+
+    boolean stepBubble(){
+        boolean change = false;
+        for(int i = startingPosition; i < vals.length - 1; i++){
+            if(sort[i] > sort[i+1]){
+                int temp = sort[i];
+                sort[i] = sort[i+1];
+                sort[i+1] = temp;
+                change = true;
+            }
+        }
+        return change;
+    }
+
+    private int selectionPos = 0;
+    boolean stepSelection(){
+        int min = sort[selectionPos];
+        int temp = min;
+        int x = -1;
+        boolean change = false;
+        for(int i = selectionPos; i < sort.length; i++){
+            if(sort[i] < min){
+                min = sort[i];
+                x = i;
+                change = true;
+            }
+        }
+        sort[selectionPos] = min;
+        try {
+            sort[x] = temp;
+        } catch(ArrayIndexOutOfBoundsException e){
+            e.printStackTrace();
+        }
+        selectionPos++;
+        return change;
     }
 
     int[] getSort(){
