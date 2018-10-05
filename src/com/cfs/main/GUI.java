@@ -14,7 +14,7 @@ public class GUI extends JFrame implements ActionListener {
 
     private Timer timer = new Timer(100, this);
 
-    Panel panel;
+    private Panel panel;
 
     void createAndShowGUI(){
         this.setSize(WIDTH, HEIGHT);
