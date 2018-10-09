@@ -4,17 +4,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.util.Random;
 
 public class GUI extends JFrame implements ActionListener {
 
-    static final int WIDTH = 800;
+    static final int WIDTH = 1200;
     static final int HEIGHT = 600;
 
     private Timer timer = new Timer(100, this);
 
     private Panel panel;
+    private JMenuBar menuBar;
 
     void createAndShowGUI(){
         this.setSize(WIDTH, HEIGHT);
@@ -23,57 +23,49 @@ public class GUI extends JFrame implements ActionListener {
         panel = new Panel();
         this.add(panel);
 
+        //menuBar = new JMenuBar();
+        //this.add(menuBar);
+
         timer.start();
         this.setVisible(true);
     }
 
     @Override
     public void actionPerformed(ActionEvent e){
-        if(panel.getRepaint()) {
-            this.revalidate();
-            this.repaint();
-        }
+        this.revalidate();
+        this.repaint();
     }
-
-    private Timer getTimer(){
-        return timer;
-    }
-
 }
 
 class Panel extends JPanel {
 
     private Sort sort;
     private int width;
-
-    private boolean repaint = true;
+    private int height;
 
     Panel(){
-        sort = new Sort();
+        sort = new Sort(this.getWidth(), this.getHeight());
         width = sort.getWidth();
+        height = sort.getHeight();
     }
 
     @Override
     public void paintComponent(Graphics g){
         int[] arr = sort.getSort();
+
         Graphics2D g2d = (Graphics2D) g;
 
         Rectangle[] rects = new Rectangle[arr.length];
 
         for(int i = 0; i < rects.length; i++){
-            rects[i] = new Rectangle(i * width, GUI.HEIGHT - arr[i], width, arr[i]);
+            rects[i] = new Rectangle(i * width, GUI.HEIGHT - arr[i] * height, width, arr[i] * height);
         }
         g2d.setColor(Color.DARK_GRAY);
         g2d.setBackground(Color.WHITE);
         for(Rectangle rect : rects){
             g2d.fill(rect);
         }
-
-        repaint = sort.stepSelection();
-    }
-
-    boolean getRepaint(){
-        return repaint;
+        sort.stepInsertion();
     }
 }
 
@@ -82,14 +74,15 @@ class Sort {
     private int[] vals;
     private int[] sort;
 
-    private int width = 1;
+    private int width = 10;
+    private int height = 10;
 
-    Sort(){
-        vals = new int[GUI.WIDTH / width];
-        int stepY = GUI.HEIGHT / vals.length;
+    Sort(int width, int height){
+        vals = new int[width / this.width];
+        int max = height / this.height;
         Random random = new Random();
         for(int i = 0; i < vals.length; i++){
-            vals[i] = stepY * random.nextInt(vals.length);
+            vals[i] = random.nextInt(max);
         }
         sort = vals.clone();
     }
@@ -109,55 +102,52 @@ class Sort {
         sort = vals.clone();
     }
 
-    private int startingPosition = 0;
-
-    boolean stepInsertion(){
-        boolean change = false;
-        for(int i = startingPosition + 1; i < vals.length; i++){
-            if(sort[i] < sort[i-1]){
-                int temp = sort[i];
-                sort[i] = sort[i-1];
-                sort[i-1] = temp;
-                change = true;
+    private int insertionIterator = 1;
+    void stepInsertion(){
+        if(insertionIterator >= sort.length){
+            return;
+        }
+        for(int j = insertionIterator; j > 0; j--){
+            if(sort[j] < sort[j-1]){
+                int temp = sort[j];
+                sort[j] = sort[j-1];
+                sort[j-1] = temp;
             }
         }
-        return change;
+        insertionIterator++;
     }
 
-    boolean stepBubble(){
-        boolean change = false;
-        for(int i = startingPosition; i < vals.length - 1; i++){
+    void stepBubble(){
+        for(int i = 0; i < vals.length - 1; i++){
             if(sort[i] > sort[i+1]){
                 int temp = sort[i];
                 sort[i] = sort[i+1];
                 sort[i+1] = temp;
-                change = true;
             }
         }
-        return change;
     }
 
     private int selectionPos = 0;
-    boolean stepSelection(){
+    void stepSelection(){
+        if(selectionPos >= sort.length){
+            return;
+        }
         int min = sort[selectionPos];
         int temp = min;
         int x = -1;
-        boolean change = false;
         for(int i = selectionPos; i < sort.length; i++){
             if(sort[i] < min){
                 min = sort[i];
                 x = i;
-                change = true;
             }
         }
         sort[selectionPos] = min;
-        try {
+
+        if(x >= 0){
             sort[x] = temp;
-        } catch(ArrayIndexOutOfBoundsException e){
-            e.printStackTrace();
         }
+
         selectionPos++;
-        return change;
     }
 
     int[] getSort(){
@@ -165,5 +155,8 @@ class Sort {
     }
     int getWidth(){
         return width;
+    }
+    int getHeight(){
+        return height;
     }
 }
