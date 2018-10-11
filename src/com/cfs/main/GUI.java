@@ -109,6 +109,7 @@ class Sort {
     }
 
     private int insertionIterator = 1;
+    @SuppressWarnings("Duplicates")
     void stepInsertion(){
         accessed = new boolean[vals.length];
         if(insertionIterator >= sort.length){
